@@ -64,5 +64,6 @@ pub fn segmented_sieve(limit: usize) -> usize {
 
 #[test]
 fn test_segmented_sieve() {
-    assert_eq!(segmented_sieve(100), 25);
+    assert_eq!(segmented_sieve(100), 25, "Sieve over a single segment");
+    assert_eq!(segmented_sieve(1_000_000), 78498, "Sieve over multiple segments");
 }

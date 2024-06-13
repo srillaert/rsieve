@@ -2,24 +2,29 @@ use std::cmp;
 
 struct PrimeIndex {
     step: u32,
-    index: u16,
+    index: u32,
 }
 
-const L1D_CACHE_SIZE: usize = 32768;
+const L1D_CACHE_SIZE: u32 = 32768;
 
-pub fn segmented_sieve(limit: usize) -> usize {
-    let sqrt = (limit as f64).sqrt() as usize;
-    let sqrt_sqrt = (sqrt as f64).sqrt() as usize;
-    let mut is_prime: Vec<bool> = vec![true; sqrt + 1];
-    for i in (3..=sqrt_sqrt).step_by(2) {
-		if is_prime[i] {
-            for j in (i*i..=sqrt).step_by(i) {
+fn get_is_prime(inclusive_till: u32) -> Vec<bool> {
+    let sqrt = (inclusive_till as f64).sqrt() as usize;
+    let mut is_prime: Vec<bool> = vec![true; (inclusive_till as usize) + 1];
+    for i in (3..=sqrt).step_by(2) {
+        if is_prime[i] {
+            for j in (i*i..is_prime.len()).step_by(i) {
                 is_prime[j] = false;
             }
-		}
+        }
     }
+    is_prime
+}
 
-    let segment_size = cmp::max(sqrt, L1D_CACHE_SIZE);
+pub fn segmented_sieve(limit: usize) -> usize {
+    let sqrt = (limit as f64).sqrt() as u32;
+    let is_prime = get_is_prime(sqrt);
+
+    let segment_size = cmp::max(sqrt, L1D_CACHE_SIZE) as usize;
     let mut count = if limit < 2 { 0 } else { 1 };
     let mut n = 3;
     let mut s = 3;
@@ -34,8 +39,8 @@ pub fn segmented_sieve(limit: usize) -> usize {
         while s * s <= high {
             if is_prime[s] {
                 prime_indexes.push(PrimeIndex {
-                    step: (s * 2) as u32,
-                    index: (s * s - low) as u16,
+                    step: s as u32,
+                    index: (s * s - low) as u32,
                 });
             }
             s += 2;
@@ -43,12 +48,12 @@ pub fn segmented_sieve(limit: usize) -> usize {
 
         for prime_index in prime_indexes.iter_mut() {
             let mut j = prime_index.index as usize;
-            let step = prime_index.step as usize; // putting this struct field in a local variable improves program speed with 10%
+            let step = (prime_index.step as usize) * 2; // putting this struct field in a local variable improves program speed with 10%
             while j < segment_size {
                 sieve[j] = false;
                 j += step;
             }
-            prime_index.index = (j - segment_size) as u16;
+            prime_index.index = (j - segment_size) as u32;
         }
 
         while n <= high {

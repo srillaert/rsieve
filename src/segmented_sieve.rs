@@ -1,8 +1,8 @@
 use std::cmp;
 
 struct PrimeIndex {
-    step: u32,
-    index: u32,
+    prime: u32,
+    segment_index: u32,
 }
 
 const L1D_CACHE_SIZE: u32 = 32768;
@@ -20,8 +20,20 @@ fn get_is_prime(inclusive_till: u32) -> Vec<bool> {
     is_prime
 }
 
+fn integer_sqrt(n: usize) -> u32 {
+    (n as f64).sqrt() as u32
+}
+
+#[test]
+fn test_integer_sqrt() {
+    assert_eq!(integer_sqrt(0), 0);
+    assert_eq!(integer_sqrt(4), 2);
+    assert_eq!(integer_sqrt(usize::MAX), u32::MAX, "sqrt of usize::MAX is u32::MAX");
+    assert!((u32::MAX as usize) * (u32::MAX as usize) < usize::MAX, "but the square of u32::MAX is less than usize::MAX");
+}
+
 pub fn segmented_sieve(limit: usize) -> usize {
-    let sqrt = (limit as f64).sqrt() as u32;
+    let sqrt = integer_sqrt(limit);
     let is_prime = get_is_prime(sqrt);
 
     let segment_size = cmp::max(sqrt, L1D_CACHE_SIZE) as usize;
@@ -39,21 +51,21 @@ pub fn segmented_sieve(limit: usize) -> usize {
         while s * s <= high {
             if is_prime[s] {
                 prime_indexes.push(PrimeIndex {
-                    step: s as u32,
-                    index: (s * s - low) as u32,
+                    prime: s as u32,
+                    segment_index: (s * s - low) as u32,
                 });
             }
             s += 2;
         }
 
         for prime_index in prime_indexes.iter_mut() {
-            let mut j = prime_index.index as usize;
-            let step = (prime_index.step as usize) * 2; // putting this struct field in a local variable improves program speed with 10%
+            let mut j = prime_index.segment_index as usize;
+            let step = (prime_index.prime as usize) * 2;
             while j < segment_size {
                 sieve[j] = false;
                 j += step;
             }
-            prime_index.index = (j - segment_size) as u32;
+            prime_index.segment_index = (j - segment_size) as u32;
         }
 
         while n <= high {

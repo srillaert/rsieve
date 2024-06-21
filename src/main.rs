@@ -9,5 +9,5 @@ fn main() {
     }
     let stop = args[1].parse().expect("STOP cannot be parsed");
     let count = segmented_sieve::segmented_sieve(stop);
-    println!("{} primes found.", count);
+    println!("{}", count);
 }

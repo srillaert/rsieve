@@ -43,9 +43,8 @@ pub fn segmented_sieve(limit: usize) -> usize {
     let mut sieve: Vec<bool> = vec![true; segment_size];
     let mut prime_indexes: Vec<PrimeIndex> = Vec::new();
 
-    for low in (0..=limit).step_by(segment_size) {
-        sieve.fill(true);
-
+    let mut low = 0usize;
+    loop {
         let high = cmp::min(low + segment_size - 1, limit);
 
         while s * s <= high {
@@ -74,6 +73,12 @@ pub fn segmented_sieve(limit: usize) -> usize {
             }
             n += 2;
         }
+
+        low += segment_size;
+        if low > limit {
+            break;
+        }
+        sieve.fill(true);
     }
 
     count

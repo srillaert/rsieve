@@ -36,15 +36,16 @@ pub fn segmented_sieve(limit: usize) -> usize {
     let sqrt = integer_sqrt(limit);
     let is_prime = get_is_prime(sqrt);
 
-    let segment_size = cmp::max(sqrt, L1D_CACHE_SIZE) as usize;
-    let mut count = if limit < 2 { 0 } else { 1 };
-    let mut n = 3;
+    let segment_size = L1D_CACHE_SIZE as usize;
+    let segment_count = (limit / segment_size) + 1;
+    let mut count = 0;
     let mut s = 3;
     let mut sieve: Vec<bool> = vec![true; segment_size];
     let mut prime_indexes: Vec<PrimeIndex> = Vec::new();
 
-    let mut low = 0usize;
+    let mut segment_index = 0usize;
     loop {
+        let low = segment_index * segment_size;
         let high = cmp::min(low + segment_size - 1, limit);
 
         while s * s <= high {
@@ -67,21 +68,18 @@ pub fn segmented_sieve(limit: usize) -> usize {
             prime_index.segment_index = (j - segment_size) as u32;
         }
 
-        while n <= high {
+        for n in ((low+1)..=high).step_by(2) {
             if sieve[n - low] {
                 count += 1;
             }
-            n += 2;
         }
 
-        low += segment_size;
-        if low > limit {
-            break;
+        segment_index += 1;
+        if segment_index > segment_count {
+            break count;
         }
         sieve.fill(true);
     }
-
-    count
 }
 
 #[test]
